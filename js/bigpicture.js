@@ -1,24 +1,24 @@
-import {createLengthArray} from "./util.js";
-
 const bigPictureItem = document.querySelector('.big-picture');
 const currentNumberComments = document.querySelector('.social__comment-count');
 const commentsLoader = document.querySelector('.comments-loader');
 
 const body = document.querySelector('body');
 
-const createComments = function(startIndex, lastIndex, template, array, parent) {
-  for (let i = startIndex; i < lastIndex; i++) {
+//индекс для отображения нужного количества комментариев
+let startIndex = 0;
+
+const createComments = function(firstIndex, secondIndex, template, array, parent) {
+  for (let i = firstIndex; i < secondIndex; i++) {
     const clonedElement = template.cloneNode(true);
     const avatarOfCommentator = clonedElement.querySelector('.social__picture');
     avatarOfCommentator.src = array[i].avatar;
     avatarOfCommentator.alt = array[i].name;
     clonedElement.querySelector('.social__text').textContent = array[i].message;
     parent.append(clonedElement);
-  };
+  }
 };
 
 const showComment = function (startIndex, nextIndex, comments, commentsElement, commentsBlock) {
-  console.log(comments)
   if (nextIndex < comments.length) {
     currentNumberComments.textContent = `${nextIndex} из ${comments.length} комментариев`;
     createComments(startIndex, nextIndex, commentsElement, comments, commentsBlock);
@@ -26,38 +26,45 @@ const showComment = function (startIndex, nextIndex, comments, commentsElement, 
     currentNumberComments.textContent = `${comments.length} из ${comments.length} комментариев`;
     createComments(startIndex, comments.length, commentsElement, comments, commentsBlock);
     commentsLoader.classList.add('hidden');
-  };
-}
+    startIndex = 0;
+  }
+};
 
 const createBigPhoto = function (url, likes, comments, description) {
 
   bigPictureItem.classList.remove('hidden');
   bigPictureItem.querySelector('.big-picture__img').children[0].src = url;
   bigPictureItem.querySelector('.likes-count').textContent = likes;
-  //bigPictureItem.querySelector('.comments-count').textContent = comments.length;
   bigPictureItem.querySelector('.social__caption').textContent = description;
   const commentsBlock = bigPictureItem.querySelector('.social__comments');
-  const commentsElement = commentsBlock.querySelector('.social__comment');
+  const templateComments = document.querySelector('#comments').content;
+  const commentsElement = templateComments.querySelector('.social__comment');
 
-  const generateLengthComments = createLengthArray();
   //начальное значение в цикле для показа первых 5 или менее комментариев
-  let startIndex = generateLengthComments();
+  startIndex = 0;
   //конечное значение в цикле для показа первых 5 или менее комментариев
-  let nextIndex = generateLengthComments();
+  let nextIndex = startIndex+5;
 
   //функция отрисовки первыз 5 или менее комментариев
   showComment(startIndex, nextIndex, comments, commentsElement, commentsBlock);
 
-  //слушатель события на кнопку "Загрузить еще"
-  commentsLoader.addEventListener('click', () => {
+  const loadComments = () => {
     startIndex = nextIndex;
-    nextIndex = generateLengthComments();
+    nextIndex = startIndex+5;
     showComment(startIndex, nextIndex, comments, commentsElement, commentsBlock);
-  })
+  };
 
-  bigPictureItem.querySelector('.big-picture__cancel').addEventListener('click', function () {
-    let commentsList = commentsBlock.querySelectorAll('.social__comment');
-    for (let i = 1; i < commentsList.length; i++) {
+  const clickCloseHandler = (evt) => {
+    loadComments();
+  };
+
+  //слушатель события на кнопку "Загрузить еще"
+  commentsLoader.addEventListener('click', clickCloseHandler);
+
+  bigPictureItem.querySelector('.big-picture__cancel').addEventListener('click', () => {
+    const commentsList = commentsBlock.querySelectorAll('.social__comment');
+
+    for (let i = 0; i < commentsList.length; i++) {
 
       commentsList[i].remove();
       commentsLoader.classList.remove('hidden');
@@ -65,10 +72,9 @@ const createBigPhoto = function (url, likes, comments, description) {
 
     bigPictureItem.classList.add('hidden');
     body.classList.remove('modal-open');
+    commentsLoader.removeEventListener('click', clickCloseHandler);
   });
 
-  /*document.querySelector('.social__comment-count').classList.add('hidden');
-  document.querySelector('.comments-loader').classList.add('hidden');*/
   body.classList.add('modal-open');
 };
 

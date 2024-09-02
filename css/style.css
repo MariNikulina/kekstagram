@@ -1430,6 +1430,7 @@ main {
   width: 50%;
   text-align: left;
   color: black;
+  margin: auto
 }
 
 .hidden {
